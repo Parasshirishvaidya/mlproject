@@ -52,7 +52,25 @@ class ModelTrainer:
                 "AdaBoost Classifier" : AdaBoostRegressor(),
             }
 
-            model_report : dict=evaluate_models(X_train=X_train,y_train=y_train,X_test=X_test,y_test=y_test,models=models)
+            param_grids = {
+                "Random Forest": {"n_estimators": [100, 200], "max_depth": [10, 20, None]},
+                "Decision Tree": {"max_depth": [10, 20, None], "criterion": ["squared_error", "friedman_mse"]},
+                "Gradient Boosting": {"learning_rate": [0.01, 0.1, 0.2], "n_estimators": [100, 200]},
+                "Linear Regression": {},  # No hyperparameters to tune for LinearRegression
+                "K-Neighbors Classifier": {"n_neighbors": [3, 5, 7], "weights": ["uniform", "distance"]},
+                "XGBClassifier": {"n_estimators": [100, 200], "learning_rate": [0.01, 0.1], "max_depth": [3, 5]},
+                "CatBoosting Classifier": {"depth": [6, 8], "learning_rate": [0.01, 0.1], "iterations": [100, 200]},
+                "AdaBoost Classifier": {"n_estimators": [50, 100], "learning_rate": [0.01, 0.1, 0.5]},
+                }
+            
+            model_report, best_model_param = evaluate_models(
+                X_train=X_train, 
+                y_train=y_train, 
+                X_test=X_test, 
+                y_test=y_test, 
+                models=models, 
+                params=param_grids
+                )
 
             # to get the best model score from the Dict
             best_model_score = max(sorted(model_report.values()))
@@ -75,7 +93,7 @@ class ModelTrainer:
 
             predicted = best_model.predict(X_test)
 
-            score = r2_score(y_test,predicted)
-            return score
+            score = r2_score(y_test,predicted),best_model_param,best_model_name
+            return score,best_model_name,best_model.get_params()
         except Exception as e:
             raise CustomException(e,sys)
